@@ -1,65 +1,35 @@
-# csscleaner README
+# CSS Cleaner VSCode Extension
 
-This is the README for your extension "csscleaner". After writing up a brief description, we recommend including the following sections.
+CSS Cleaner is the light-weight way to clean up your front end refactors. webpack is nice, but it is a pain to use it to identify class and id definitions that are no longer used or are dead.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+CSS Cleaner VSCode Extension automatically searches your workspace .css files for css class and id definitions and checks your html and js files for usages. If it finds dead css, it will link to it in the console as a nice diagnostic alert.
 
-For example if there is an image subfolder under your extension project workspace:
+This only works for definitions in .css classes currently (inline css not supported)
 
-\!\[feature X\]\(images/feature-x.png\)
+## Installation
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+Clone the repo:
 
-## Requirements
+`git clone https://github.com/T-Ev/csscleaner.git`
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+Then install the extension in vscode:
 
-## Extension Settings
+`code --install-extension csscleaner.vsix`
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+## Commands
 
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+You can trigger a cleaning in the vscode command palette via the "Clean CSS" command
 
 ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Only .css files searched for style definitions
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+Coming Soon
 
 ### 1.0.0
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release of csscleaner
