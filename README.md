@@ -1,6 +1,6 @@
 # CSS Cleaner VSCode Extension
 
-CSS Cleaner is the light-weight way to clean up your front end refactors. webpack is nice, but it is a pain to use it to identify class and id definitions that are no longer used or are dead.
+CSS Cleaner is the light-weight way to clean up your front end refactors. Webpack is nice, but it is a pain to use it to identify class and id definitions that are no longer used or are dead.
 
 ## Features
 
