@@ -59,7 +59,7 @@ async function findMediaFiles() {
     if (res.length == 0) {
       //found one
       console.log(mediaName + " is Unused in HTML/JS---------------------");
-      mediadiags.push(createMediaDiagnostic(m[mind].fsPath, { text: "test" }, 0, "test", true));
+      mediadiags.push(createMediaDiagnostic(m[mind].fsPath, { text: "This" }, 0, "This", true));
       // console.log(mediadiags);
       // vscode.window.showInformationMessage(st + " is Unused in HTML/JS---------------------");
     } else {
