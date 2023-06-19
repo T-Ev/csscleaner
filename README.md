@@ -6,7 +6,7 @@ CSS Cleaner is the light-weight way to clean up your front end refactors. Webpac
 
 CSS Cleaner VSCode Extension automatically searches your workspace .css files for css class and id definitions and checks your html and js files for usages. If it finds dead css, it will link to it in the console as a nice diagnostic alert.
 
-This only works for definitions in .css classes currently (inline css not supported)
+This only works for definitions in .css files currently (inline css not supported)
 
 ## Installation
 
@@ -14,13 +14,21 @@ Clone the repo:
 
 `git clone https://github.com/T-Ev/csscleaner.git`
 
+(Optional) Install VSCE:
+`npm install --global @vscode/vsce`
+
+Build package with:
+`vsce package`
+
 Then install the extension in vscode:
 
-`code --install-extension csscleaner.vsix`
+`code --install-extension csscleaner-0.0.9.vsix`
 
 ## Commands
 
-You can trigger a cleaning in the vscode command palette via the "Clean CSS" command
+You can trigger a CSS FILE cleaning in the vscode command palette via the "Clean CSS" command or by saving a code file
+
+You can trigger a MEDIA FILE cleaning in the vscode command palette via the "Clean Media" command
 
 ## Known Issues
 

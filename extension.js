@@ -1,33 +1,90 @@
 const vscode = require("vscode");
+const URI = require("vscode-uri").URI;
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 let diagGroup = null;
+let mediaDiagGroup = null;
 function activate(context) {
   console.log('Congratulations, your extension "csscleaner" is now active!');
 
-  let disposable = vscode.commands.registerCommand("csscleaner.clean", grabfiles);
+  context.subscriptions.push(vscode.commands.registerCommand("csscleaner.clean", grabfiles));
   let onsave = vscode.commands.registerCommand("csscleaner.onSave", function () {
     vscode.window.showInformationMessage("File Saved");
   });
+
+  let onCleanMedia = vscode.commands.registerCommand("csscleaner.onCleanMedia", findMediaFiles);
   vscode.window.showInformationMessage("Hello World from cssCleaner!");
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(onCleanMedia);
   context.subscriptions.push(onsave);
   diagGroup = vscode.languages.createDiagnosticCollection("CSS Cleaner");
+  context.subscriptions.push(diagGroup);
+  mediaDiagGroup = vscode.languages.createDiagnosticCollection("Media Cleaner");
   context.subscriptions.push(diagGroup);
   subscribeToDocumentChanges(context, diagGroup);
 }
 
-async function grabfiles() {
+async function findMediaFiles() {
+  let m = await vscode.workspace.findFiles("**/**.{png,jpg,svg,gif,mp3,mp4,wav}", "**/{node_modules,components,mobileui,locales,res,docs,.monaca}/");
+  let h = await vscode.workspace.findFiles("**/**.{html,hbs,js,css}", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
+  let txt = [];
+  for (var hind = 0; hind < h.length; hind++) {
+    await vscode.workspace.openTextDocument(h[hind].fsPath).then((doc) => {
+      let b = h[hind].path.split("/");
+      txt.push({ filename: b[b.length - 1], path: h[hind].fsPath, content: doc });
+    });
+  }
+  for (var mind = 0; mind < m.length; mind++) {
+    let b = m[mind].path.split("/");
+    let mediaName = b[b.length - 1];
+    console.log("Searching " + mediaName);
+    let res = [];
+    let mediadiags = [];
+    txt.forEach((ele) => {
+      let cont = ele.content.getText();
+      if (cont.includes(mediaName)) {
+        // console.log("found " + mediaName + " in " + ele.content.uri);
+        for (let lineIndex = 0; lineIndex < ele.content.lineCount; lineIndex++) {
+          const lineOfText = ele.content.lineAt(lineIndex);
+          if (lineOfText.text.includes(mediaName)) res.push({ line: lineIndex, lineText: lineOfText, class: mediaName, fileName: ele.path });
+        }
+        // let splithtml = cont.split("\r\n");
+        // for (var l = 0; l < splithtml.length; l++) {
+        //   res.push({ line: l, lineText: splithtml[l], content: splithtml, class: mediaName, fileName: ele.filename });
+        // }
+      }
+    });
+
+    if (res.length == 0) {
+      //found one
+      console.log(mediaName + " is Unused in HTML/JS---------------------");
+      mediadiags.push(createMediaDiagnostic(m[mind].fsPath, { text: "test" }, 0, "test", true));
+      // console.log(mediadiags);
+      // vscode.window.showInformationMessage(st + " is Unused in HTML/JS---------------------");
+    } else {
+      console.log(mediaName + " is used " + res.length + " times");
+      console.log(res);
+      res.forEach((fin) => {
+        // console.log(fin);
+        mediadiags.push(createMediaDiagnostic(fin.fileName, fin.lineText, fin.line, mediaName, false));
+      });
+      // console.log(mediadiags);
+    }
+    if (mediadiags.length > 0) mediaDiagGroup.set(URI.file(m[mind].path), mediadiags);
+  }
+}
+
+async function grabfiles(doc) {
+  if (doc && diagGroup) diagGroup.delete(doc.uri);
   if (!vscode.workspace || typeof vscode.workspace.workspaceFolders === "undefined") {
     return vscode.window.showErrorMessage("Please open a project folder first");
   }
   console.log(decodeURIComponent(vscode.workspace.workspaceFolders[0].uri));
   const folderPath = decodeURIComponent(vscode.workspace.workspaceFolders[0].uri).split(":")[2] + "bot/";
 
-  let c = await vscode.workspace.findFiles("**/**.css", "**/{node_modules,components,mobileui,img,res,docs,.monaca}/");
-  let h = await vscode.workspace.findFiles("**/**.{html,hbs,js}", "**/{node_modules,components,mobileui,img,res,docs,.monaca}/");
+  let c = await vscode.workspace.findFiles("**/**.css", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
+  let h = await vscode.workspace.findFiles("**/**.{html,hbs,js}", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
   let cssf = [],
     htmlf = [];
   for (var cind = 0; cind < c.length; cind++) {
@@ -73,8 +130,11 @@ async function parse(css, html, _diagGroup) {
         let splithtml = ele.content.getText().split("\r\n");
         for (var l = 0; l < splithtml.length; l++) {
           if (constructReg(st).test(splithtml[l])) {
-            //search html and js files for class name
-            res.push({ line: l, content: splithtml, class: st });
+            if (!splithtml[l].includes(`${st}").on(`)) {
+              //make sure it isn't just adding event listener
+              //search html and js files for class name
+              res.push({ line: l, content: splithtml, class: st });
+            }
           }
         }
       });
@@ -102,7 +162,7 @@ function getDiagnostic(diagnosticsArray, doc, Class) {
 
 function constructReg(Class) {
   // console.log(RegExp(`(?:${Class})+`));
-  return new RegExp(`(?:"${Class}"|'${Class}'| ${Class}"| ${Class}'|"${Class} |'${Class} | ${Class} |\.${Class}"|#${Class}"|\.${Class}'|#${Class}')+`);
+  return new RegExp(`(?:"${Class}"|'${Class}'| ${Class}"| ${Class}'|"${Class} |'${Class} | ${Class} |\.${Class}"|#${Class}"|\.${Class}'|#${Class}'|\.${Class},|#${Class},)+`);
 }
 
 function cleanCSS(css) {
@@ -142,8 +202,22 @@ function createDiagnostic(doc, lineOfText, lineIndex, Class) {
   // create range that represents, where in the document the word is
   const range = new vscode.Range(lineIndex, index, lineIndex, index + Class.length);
 
-  const diagnostic = new vscode.Diagnostic(range, `Class ${Class} is unused in HTML/JS:: ${lineOfText.text}`, vscode.DiagnosticSeverity.Information);
+  const diagnostic = new vscode.Diagnostic(range, `${Class} is unused in HTML/JS`, vscode.DiagnosticSeverity.Information);
   diagnostic.code = "css_cleaner";
+  return diagnostic;
+}
+function createMediaDiagnostic(filename, lineOfText, lineIndex, Class, error) {
+  // find where in the line of that the 'emoji' is mentioned
+  // console.log(lineOfText.text + " :: " + Class);
+  const index = lineOfText.text.indexOf(Class);
+
+  // create range that represents, where in the document the word is
+  const range = new vscode.Range(lineIndex, index, lineIndex, index + Class.length);
+  let diagnostic = null;
+  // console.log(filename);
+  if (error) diagnostic = new vscode.Diagnostic(range, `${Class} Media is unused in HTML/JS/CSS`, vscode.DiagnosticSeverity.Error);
+  else diagnostic = new vscode.Diagnostic(range, `${Class} Media was referenced  at line ${lineIndex} \nin ${filename}`, vscode.DiagnosticSeverity.Information);
+  diagnostic.code = "media_cleaner";
   return diagnostic;
 }
 function subscribeToDocumentChanges(context, diagGroup) {
@@ -158,7 +232,7 @@ function subscribeToDocumentChanges(context, diagGroup) {
   //   })
   // );
   // context.subscriptions.push(vscode.workspace.onDidOpenTextDocument(grabfiles));
-  // context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(grabfiles));
+  context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((doc) => grabfiles(doc)));
 
   context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((doc) => diagGroup.delete(doc.uri)));
 }
