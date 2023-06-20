@@ -26,6 +26,7 @@ function activate(context) {
 }
 
 async function findMediaFiles() {
+  mediaDiagGroup.clear();
   let m = await vscode.workspace.findFiles("**/**.{png,jpg,svg,gif,mp3,mp4,wav}", "**/{node_modules,components,mobileui,locales,res,docs,.monaca}/");
   let h = await vscode.workspace.findFiles("**/**.{html,hbs,js,css}", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
   let txt = [];
