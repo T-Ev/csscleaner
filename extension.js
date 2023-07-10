@@ -275,8 +275,8 @@ function cleanCSS(css) {
 
 function createDiagnostic(doc, lineOfText, lineIndex, Class) {
   // find where in the line of that the 'emoji' is mentioned
-  const index = lineOfText.text.indexOf(Class);
-
+  let index = lineOfText.text.indexOf(Class);
+  if (index < 0) index = 0;
   // create range that represents, where in the document the word is
   const range = new vscode.Range(lineIndex, index, lineIndex, index + Class.length);
 

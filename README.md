@@ -22,7 +22,7 @@ Build package with:
 
 Then install the extension in vscode:
 
-`code --install-extension csscleaner-0.0.16.vsix`
+`code --install-extension csscleaner-0.0.17.vsix`
 
 ## Commands
 
