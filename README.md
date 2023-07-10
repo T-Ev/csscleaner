@@ -26,13 +26,15 @@ Then install the extension in vscode:
 
 ## Commands
 
-You can trigger a CSS FILE cleaning in the vscode command palette via the "Clean CSS" command or by saving a code file
+You can trigger a CSS FILE cleaning in the vscode command palette via the "Clean CSS" command or by saving a code file, which highlights all unused CSS classes in the project
 
-You can trigger a MEDIA FILE cleaning in the vscode command palette via the "Clean Media" command
+You can trigger a MEDIA FILE cleaning in the vscode command palette via the "Clean Media" command, which highlights all unused media files in the project.
+
+You can trigger a JS FILE cleaning in the vscode command palette via the "Clean JS" command, which highlights all implemented class and id usages in the JS files in the project.
 
 ## Known Issues
 
-Only .css files searched for style definitions
+Extension might not find the HTML reference for an ID or class if the HTML is dynamically generated in a JS file. Be sure to double check all unused code before removing it!
 
 ## Release Notes
 
