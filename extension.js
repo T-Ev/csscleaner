@@ -6,6 +6,7 @@ const URI = require("vscode-uri").URI;
  */
 let diagGroup = null;
 let mediaDiagGroup = null;
+let jsDiagGroup = null;
 function activate(context) {
   console.log('Congratulations, your extension "csscleaner" is now active!');
 
@@ -18,10 +19,14 @@ function activate(context) {
   vscode.window.showInformationMessage("Hello World from cssCleaner!");
   context.subscriptions.push(onCleanMedia);
   context.subscriptions.push(onsave);
+  let onCleanJS = vscode.commands.registerCommand("csscleaner.onCleanJS", grabFilesForJS);
+  context.subscriptions.push(onCleanJS);
   diagGroup = vscode.languages.createDiagnosticCollection("CSS Cleaner");
   context.subscriptions.push(diagGroup);
   mediaDiagGroup = vscode.languages.createDiagnosticCollection("Media Cleaner");
-  context.subscriptions.push(diagGroup);
+  context.subscriptions.push(mediaDiagGroup);
+  jsDiagGroup = vscode.languages.createDiagnosticCollection("JS Cleaner");
+  context.subscriptions.push(jsDiagGroup);
   subscribeToDocumentChanges(context, diagGroup);
 }
 
@@ -111,6 +116,78 @@ async function grabfiles(doc) {
   // 	}
   // 	vscode.window.showInformationMessage('Created boilerplate files');
   //   });
+}
+
+async function grabFilesForJS(doc) {
+  if (doc && jsDiagGroup) jsDiagGroup.delete(doc.uri);
+  let j = await vscode.workspace.findFiles("**/**.js", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
+  let h = await vscode.workspace.findFiles("**/**.{html,hbs}", "**/{node_modules,components,mobileui,img,locales,res,docs,.monaca}/");
+  let jsf = [],
+    htmlf = [];
+  for (var jind = 0; jind < j.length; jind++) {
+    await vscode.workspace.openTextDocument(j[jind].fsPath).then((doc) => {
+      let b = j[jind].path.split("/");
+      jsf.push({ filename: b[b.length - 1], path: j[jind].fsPath, content: doc });
+    });
+  }
+  for (var hind = 0; hind < h.length; hind++) {
+    await vscode.workspace.openTextDocument(h[hind].fsPath).then((doc) => {
+      let b = h[hind].path.split("/");
+      htmlf.push({ filename: b[b.length - 1], path: h[hind].fsPath, content: doc });
+    });
+  }
+  //parse each js file
+  let tested = [];
+  let missing = [];
+
+  //loop through each file
+  jsf.forEach((ele2) => {
+    let d = [];
+
+    let lines = ele2.content.getText().split("\r\n");
+    lines.forEach((cont, ind) => {
+      let classIdReg = /(?:\$\("\.|\$\("#|, \.|, #)+/g;
+      let tokens = cont.split(classIdReg); // split by id
+      // console.log(tokens);
+      // if(classIdReg.test(cont)){
+      if (tokens.length > 1) {
+        for (let tokind = 1; tokind < tokens.length; tokind++) {
+          let res = [];
+          let cleanTokArray = tokens[tokind].split(/(?:"\)| )+/g);
+          // console.log("array:");
+          // console.log(cleanTokArray);
+          let cleanTok = cleanTokArray[0];
+          if (cleanTok === "") cleanTok = cleanTokArray[1];
+          if (!/[\. ]/.test(cleanTok)) {
+            // if (tested.includes(cleanTok)) {
+            //   console.log(`${cleanTok} aready found`);
+            //   if (missing.includes(cleanTok)) console.log(`${cleanTok} Aready found to be MISSING, but found again`);
+            //   res.push({ line: lineIndex, lineText: lineOfText, class: cleanTok, fileName: ele.path });
+            // } else {
+            htmlf.forEach((ele) => {
+              for (let lineIndex = 0; lineIndex < ele.content.lineCount; lineIndex++) {
+                const lineOfText = ele.content.lineAt(lineIndex);
+                if (lineOfText.text.includes(cleanTok)) {
+                  // console.log("Foundit: " + cleanTok + " in " + ele.content.uri);
+                  res.push({ line: lineIndex, lineText: lineOfText, class: cleanTok, fileName: ele.path });
+                }
+              }
+            });
+            // }
+            if (res.length == 0) {
+              console.log("Found unused: " + cleanTok);
+              if (!missing.includes(cleanTok)) missing.push(cleanTok);
+              d.push(createDiagnostic(ele2.content, ele2.content.lineAt(ind), ind, cleanTok));
+            }
+            if (!tested.includes(cleanTok)) tested.push(cleanTok);
+          }
+        }
+      }
+    });
+    if (d.length > 0) jsDiagGroup.set(ele2.content.uri, d);
+  });
+  console.log(missing);
+  console.log(tested);
 }
 
 async function parse(css, html, _diagGroup) {
