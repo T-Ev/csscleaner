@@ -21,6 +21,10 @@ function activate(context) {
   context.subscriptions.push(onsave);
   let onCleanJS = vscode.commands.registerCommand("csscleaner.onCleanJS", grabFilesForJS);
   context.subscriptions.push(onCleanJS);
+  let onCleanJSDiags = vscode.commands.registerCommand("csscleaner.onCleanJSDiag", function () {
+    if (jsDiagGroup) jsDiagGroup.clear();
+  });
+  context.subscriptions.push(onCleanJSDiags);
   diagGroup = vscode.languages.createDiagnosticCollection("CSS Cleaner");
   context.subscriptions.push(diagGroup);
   mediaDiagGroup = vscode.languages.createDiagnosticCollection("Media Cleaner");
