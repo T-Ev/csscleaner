@@ -2,7 +2,7 @@
   "name": "csscleaner",
   "displayName": "cssCleaner",
   "description": "Finds and highlights unused css in project",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "repository": "https://github.com/T-Ev/csscleaner.git",
   "engines": {
     "vscode": "^1.79.0"
@@ -33,7 +33,7 @@
         "title": "Clean JS"
       },
       {
-        "command": "csscleaner.onCleanJSDiags",
+        "command": "csscleaner.onCleanJSDiag",
         "title": "Clear JS Diagnostics"
       }
     ]

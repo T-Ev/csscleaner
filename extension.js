@@ -148,7 +148,7 @@ async function grabFilesForJS(doc) {
   jsf.forEach((ele2) => {
     let d = [];
 
-    let lines = ele2.content.getText().split("\r\n");
+    let lines = ele2.content.getText().split("\n");
     lines.forEach((cont, ind) => {
       let classIdReg = /(?:\$\("\.|\$\("#|, \.|, #)+/g;
       let tokens = cont.split(classIdReg); // split by id
